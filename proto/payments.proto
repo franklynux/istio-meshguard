@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package payments;
+
+option go_package = "github.com/franklynux/istio-meshguard/services/orders/pb/payments";
+
+// Payments processes a (mocked) charge against an order.
+service Payments {
+  rpc Charge(ChargeRequest) returns (ChargeResponse);
+}
+
+message ChargeRequest {
+  string order_id = 1;
+  double amount = 2;
+}
+
+message ChargeResponse {
+  bool success = 1;
+  // transaction_id is set when success is true.
+  string transaction_id = 2;
+  // error is set when success is false.
+  string error = 3;
+}

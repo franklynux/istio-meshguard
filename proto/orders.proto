@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package orders;
+
+option go_package = "github.com/franklynux/istio-meshguard/services/orders/pb";
+
+// Orders accepts a new order and orchestrates stock, payment, and
+// confirmation across the inventory, payments, and notifications services.
+service Orders {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+}
+
+message OrderItem {
+  string sku = 1;
+  int32 quantity = 2;
+}
+
+message CreateOrderRequest {
+  repeated OrderItem items = 1;
+  string email = 2;
+  double amount = 3;
+}
+
+message CreateOrderResponse {
+  string order_id = 1;
+  // status is one of: "confirmed", "rejected", "payment_failed".
+  string status = 2;
+  // error is set when status is not "confirmed".
+  string error = 3;
+}

@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package inventory;
+
+option go_package = "github.com/franklynux/istio-meshguard/services/inventory/pb";
+
+// Inventory tracks stock levels for SKUs and lets callers check
+// availability and decrement stock when an order is placed.
+service Inventory {
+  rpc CheckStock(CheckStockRequest) returns (CheckStockResponse);
+  rpc Decrement(DecrementRequest) returns (DecrementResponse);
+}
+
+message CheckStockRequest {
+  string sku = 1;
+  int32 quantity = 2;
+}
+
+message CheckStockResponse {
+  // available is only meaningful when found is true.
+  bool available = 1;
+  bool found = 2;
+}
+
+message DecrementRequest {
+  string sku = 1;
+  int32 quantity = 2;
+}
+
+message DecrementResponse {
+  bool success = 1;
+  // error is set when success is false (e.g. unknown SKU, insufficient stock).
+  string error = 2;
+}
