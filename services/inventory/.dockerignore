@@ -1,0 +1,4 @@
+inventory
+Dockerfile
+.dockerignore
+*_test.go
