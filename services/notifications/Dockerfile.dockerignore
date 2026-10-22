@@ -1,0 +1,6 @@
+*
+!proto/notifications.proto
+!services/notifications/package.json
+!services/notifications/package-lock.json
+!services/notifications/server.js
+!services/notifications/confirmations.js
