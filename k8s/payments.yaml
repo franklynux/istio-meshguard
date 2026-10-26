@@ -1,0 +1,74 @@
+# Service Account for payments
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: payments
+  namespace: ecommerce
+
+---
+# Service for payments
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments
+  namespace: ecommerce
+  labels:
+    app: payments
+spec:
+  selector:
+    app: payments
+  ports:
+    - name: grpc
+      port: 50052
+      targetPort: 50052
+      appProtocol: grpc
+
+---
+# Deployment for payments
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments
+  namespace: ecommerce
+  labels:
+    app: payments
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payments
+  template:
+    metadata:
+      labels:
+        app: payments
+        version: v1
+    spec:
+      serviceAccountName: payments
+      containers:
+        - name: payments
+          image: 536697239284.dkr.ecr.us-east-1.amazonaws.com/istio-meshguard/payments:1b1cf08
+          ports:
+            - name: grpc
+              containerPort: 50052
+          readinessProbe:
+            tcpSocket:
+              port: 50052
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 50052
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

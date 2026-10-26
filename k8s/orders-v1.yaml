@@ -1,0 +1,84 @@
+# Service Account for orders
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: orders
+  namespace: ecommerce
+
+---
+# One Service for both versions(v1 & v2): it selects on app=orders only.
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders
+  namespace: ecommerce
+  labels:
+    app: orders
+spec:
+  selector:
+    app: orders
+  ports:
+    - name: grpc
+      port: 50050
+      targetPort: 50050
+      appProtocol: grpc
+
+---
+# Deployment for orders-v1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-v1
+  namespace: ecommerce
+  labels:
+    app: orders
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orders
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: orders
+        version: v1
+    spec:
+      serviceAccountName: orders
+      containers:
+        - name: orders
+          image: 536697239284.dkr.ecr.us-east-1.amazonaws.com/istio-meshguard/orders:1b1cf08
+          env:
+            - name: INVENTORY_ADDR
+              value: inventory:50051
+            - name: PAYMENTS_ADDR
+              value: payments:50052
+            - name: NOTIFICATIONS_ADDR
+              value: notifications:50053
+          ports:
+            - name: grpc
+              containerPort: 50050
+          readinessProbe:
+            tcpSocket:
+              port: 50050
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 50050
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

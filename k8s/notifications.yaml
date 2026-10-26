@@ -1,0 +1,76 @@
+# Service Account for notifications
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: notifications
+  namespace: ecommerce
+
+
+---
+# Service for notifications
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications
+  namespace: ecommerce
+  labels:
+    app: notifications
+spec:
+  selector:
+    app: notifications
+  ports:
+    - name: grpc
+      port: 50053
+      targetPort: 50053
+      appProtocol: grpc
+
+---
+# Deployment for notifications
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+  namespace: ecommerce
+  labels:
+    app: notifications
+    version: v1
+spec:
+  # Confirmations are held in memory, so keep a single replica.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifications
+  template:
+    metadata:
+      labels:
+        app: notifications
+        version: v1
+    spec:
+      serviceAccountName: notifications
+      containers:
+        - name: notifications
+          image: 536697239284.dkr.ecr.us-east-1.amazonaws.com/istio-meshguard/notifications:1b1cf08
+          ports:
+            - name: grpc
+              containerPort: 50053
+          readinessProbe:
+            tcpSocket:
+              port: 50053
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 50053
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
