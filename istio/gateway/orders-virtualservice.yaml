@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: orders
+  namespace: ecommerce
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - meshguard-gateway
+  http:
+    - route:
+        - destination:
+            host: orders
+            port:
+              number: 50050
