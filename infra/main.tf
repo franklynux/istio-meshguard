@@ -99,7 +99,7 @@ resource "aws_eks_addon" "coredns" {
 module "ecr" {
   source               = "./modules/ecr"
   for_each             = local.services
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   name = "${var.project_name}/${each.key}"
 }
