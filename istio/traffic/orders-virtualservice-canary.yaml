@@ -12,5 +12,13 @@ spec:
     - route:
         - destination:
             host: orders
+            subset: v1
             port:
               number: 50050
+          weight: 90
+        - destination:
+            host: orders
+            subset: v2
+            port:
+              number: 50050
+          weight: 10
