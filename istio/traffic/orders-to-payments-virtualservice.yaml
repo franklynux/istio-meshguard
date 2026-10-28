@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: payments
+  namespace: ecommerce
+spec:
+  hosts:
+    - payments
+  http:
+    - route:
+        - destination:
+            host: payments
+            port:
+              number: 50052
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: unavailable,connect-failure,refused-stream
