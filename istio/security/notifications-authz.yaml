@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: notifications-allow-orders
+  namespace: ecommerce
+spec:
+  selector:
+    matchLabels:
+      app: notifications
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/ecommerce/sa/orders"]
