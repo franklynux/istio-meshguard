@@ -30,10 +30,10 @@ type server struct {
 }
 
 func (s *server) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
-	// One deadline covers the whole order flow, so a hung dependency cannot
-	// hold a request open forever.
+	setVersionHeader(ctx)
 	ctx, cancel := context.WithTimeout(ctx, orderTimeout)
 	defer cancel()
+	ctx = propagateTraceHeaders(ctx)
 
 	items := make([]OrderItem, 0, len(req.GetItems()))
 	for _, it := range req.GetItems() {

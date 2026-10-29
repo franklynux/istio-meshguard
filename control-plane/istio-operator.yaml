@@ -1,0 +1,11 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  profile: default
+  meshConfig:
+    enableTracing: true
+    extensionProviders:
+      - name: jaeger
+        opentelemetry:
+          port: 4317
+          service: jaeger-collector.istio-system.svc.cluster.local
