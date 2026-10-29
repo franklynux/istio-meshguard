@@ -48,7 +48,7 @@ spec:
       serviceAccountName: orders
       containers:
         - name: orders
-          image: 536697239284.dkr.ecr.us-east-1.amazonaws.com/istio-meshguard/orders:1b1cf08
+          image: 536697239284.dkr.ecr.us-east-1.amazonaws.com/istio-meshguard/orders:936dede
           env:
             - name: INVENTORY_ADDR
               value: inventory:50051
@@ -56,6 +56,10 @@ spec:
               value: payments:50052
             - name: NOTIFICATIONS_ADDR
               value: notifications:50053
+            - name: ORDERS_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['version']
           ports:
             - name: grpc
               containerPort: 50050
