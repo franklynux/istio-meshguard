@@ -12,5 +12,5 @@ variable "image_tag_mutability" {
 variable "max_image_count" {
   description = "How many images to keep before older ones expire"
   type        = number
-  default     = 5
+  default     = 20
 }

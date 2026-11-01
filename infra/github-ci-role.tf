@@ -46,6 +46,7 @@ data "aws_iam_policy_document" "github_ci_ecr" {
       "ecr:PutImage",
       "ecr:DescribeImages",
       "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
     ]
     resources = [
       "arn:aws:ecr:${data.aws_region.gh_ci.region}:${data.aws_caller_identity.gh_ci.account_id}:repository/${var.project_name}/*"
