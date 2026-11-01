@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "github_ci_trust" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:franklynux/istio-meshguard:ref:refs/heads/main"]
+      values   = ["repo:franklynux@170720658/istio-meshguard@1421206344:ref:refs/heads/main"]
     }
   }
 }
