@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -83,9 +84,15 @@ jobs:
             -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
             k8s istio chaos
 
-  build-images:
+  build-push:
     runs-on: ubuntu-latest
-    needs: [test-go, test-payments, test-notifications]
+    needs: [test-go, test-payments, test-notifications, validate-manifests]
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: us-east-1
+      PUSH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.ECR_PUSH_ENABLED == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -106,11 +113,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+
+      - name: Configure AWS credentials (OIDC, no stored keys)
+        if: env.PUSH == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to ECR
+        id: ecr
+        if: env.PUSH == 'true'
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Compute image tag
+        id: tag
+        run: echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this tag already exists
+        id: exists
+        if: env.PUSH == 'true'
+        run: |
+          if aws ecr describe-images \
+              --repository-name "istio-meshguard/${{ matrix.service }}" \
+              --image-ids "imageTag=${{ steps.tag.outputs.sha }}" >/dev/null 2>&1; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "Tag ${{ steps.tag.outputs.sha }} already exists; skipping push (tags are immutable)."
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build (and push when enabled)
+        if: steps.exists.outputs.found != 'true'
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
-          push: false
-          tags: ${{ matrix.service }}:ci
+          push: ${{ env.PUSH == 'true' }}
+          tags: ${{ env.PUSH == 'true' && format('{0}/istio-meshguard/{1}:{2}', steps.ecr.outputs.registry, matrix.service, steps.tag.outputs.sha) || format('{0}:ci', matrix.service) }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
