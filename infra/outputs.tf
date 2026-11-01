@@ -17,3 +17,7 @@ output "cluster_certificate_authority_data" {
 output "ecr_repository_urls" {
   value = { for svc, m in module.ecr : svc => m.repository_url }
 }
+
+output "github_ci_role_arn" {
+  value = aws_iam_role.github_ci.arn
+}
