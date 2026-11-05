@@ -55,7 +55,7 @@ module "eks" {
   version = "~> 21.0"
 
   name                                     = var.cluster_name
-  kubernetes_version                       = "1.32"
+  kubernetes_version                       = "1.35"
   enable_cluster_creator_admin_permissions = true
   endpoint_public_access                   = true
 
